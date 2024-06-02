@@ -1,0 +1,34 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "include": [
+    "LegacyPresets.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "dc-vcpkg",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "dc-debug-vcpkg",
+      "hidden": true,
+      "inherits": ["dc-debug", "dc-vcpkg"],
+      "displayName": "Debug - Vcpkg",
+      "binaryDir": "build-debug-vcpkg"
+    },
+    {
+      "name": "dc-release-vcpkg",
+      "hidden": true,
+      "inherits": ["dc-release", "dc-vcpkg"],
+      "displayName": "Release - Vcpkg",
+      "binaryDir": "build-release-vcpkg"
+    }
+  ]
+}

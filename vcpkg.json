@@ -1,0 +1,28 @@
+{
+  "name": "novums",
+  "version-semver": "0.0.1",
+  "license": "MIT",
+  "maintainers": [
+    "Denys Asauliak <denoming@gmail.com>"
+  ],
+  "supports": "linux and !windows",
+  "dependencies": [
+    {
+      "name": "boost-core",
+      "version>=": "1.83.0"
+    },
+    {
+      "name": "boost-asio",
+      "version>=": "1.83.0"
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "x264",
+        "x265"
+      ]
+    },
+    "spdlog",
+    "libsigcpp"
+  ]
+}

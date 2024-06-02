@@ -1,0 +1,64 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "include": [
+    "cmake/presets/LegacyPresets.json",
+    "cmake/presets/VcpkgPresets.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "debug",
+      "inherits": ["dc-debug"],
+      "binaryDir": "build-debug",
+      "displayName": "Debug"
+    },
+    {
+      "name": "release",
+      "inherits": ["dc-release"],
+      "binaryDir": "build-release",
+      "displayName": "Release"
+    },
+    {
+      "name": "debug-vcpkg",
+      "inherits": ["dc-debug-vcpkg"],
+      "binaryDir": "build-debug-vcpkg",
+      "displayName": "Debug - Vcpkg"
+    },
+    {
+      "name": "release-vcpkg",
+      "inherits": ["dc-release-vcpkg"],
+      "binaryDir": "build-release-vcpkg",
+      "displayName": "Release - Vcpkg"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-debug",
+      "displayName": "Build [Debug]",
+      "configurePreset": "debug",
+      "jobs": 0
+    },
+    {
+      "name": "build-release",
+      "displayName": "Build [Release]",
+      "configurePreset": "release",
+      "jobs": 0
+    },
+    {
+      "name": "build-debug-vcpkg",
+      "displayName": "Build [Debug - Vcpkg]",
+      "configurePreset": "debug-vcpkg",
+      "jobs": 0
+    },
+    {
+      "name": "build-release-vcpkg",
+      "displayName": "Build [Release - Vcpkg]",
+      "configurePreset": "release-vcpkg",
+      "jobs": 0
+    }
+  ]
+}
