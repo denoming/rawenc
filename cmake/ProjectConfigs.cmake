@@ -5,3 +5,4 @@ include(BuildLocation)
 
 include(AddFFMpeg)
 include(AddBoost)
+include(AddLibV4l2)

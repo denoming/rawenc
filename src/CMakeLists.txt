@@ -18,6 +18,7 @@ target_link_libraries(${TARGET}
     PRIVATE Boost::headers
             FFMPEG::avcodec
             FFMPEG::avutil
+            LibV4l2::LibV4l2
 )
 
 target_compile_features(${TARGET} PRIVATE cxx_std_20)
