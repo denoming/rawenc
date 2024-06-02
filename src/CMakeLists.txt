@@ -11,13 +11,18 @@ set_target_properties(${TARGET}
 )
 
 target_sources(${TARGET}
-    PRIVATE
-        main.cpp
+    PRIVATE main.cpp
 )
 
-target_compile_features(${TARGET} PRIVATE cxx_std_17)
+target_link_libraries(${TARGET}
+    PRIVATE Boost::headers
+            FFMPEG::avcodec
+            FFMPEG::avutil
+)
+
+target_compile_features(${TARGET} PRIVATE cxx_std_20)
 
 install(
     TARGETS ${TARGET}
-    COMPONENT RAWENC_Runtime
+    COMPONENT RawEnc_Runtime
 )
