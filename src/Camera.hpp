@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Types.hpp"
-
 #include <sigc++/signal.h>
 
 #include <optional>
@@ -9,11 +7,23 @@
 #include <vector>
 #include <thread>
 
+struct CameraConfig {
+    unsigned width{};
+    unsigned height{};
+    unsigned bufferCount{};
+};
+
+struct CapturedFrame {
+    unsigned sequence{};
+    void* data{};
+    unsigned int size{};
+};
+
 class Camera {
 public:
     static constexpr int kInvalidFd = -1;
 
-    using OnFrameReadySig = sigc::signal<void(const FrameBuffer& buffer)>;
+    using OnFrameReadySig = sigc::signal<void(const CapturedFrame& frame)>;
 
     explicit Camera(std::string deviceName = "/dev/video0");
 
@@ -72,7 +82,13 @@ private:
     handleWorker(const std::stop_token& token) const;
 
     void
-    notifyFrameReady(const FrameBuffer& buffer) const;
+    notifyFrameReady(const CapturedFrame& frame) const;
+
+private:
+    struct FrameBuffer {
+        void* ptr{};
+        unsigned int length{};
+    };
 
 private:
     std::string _deviceName;

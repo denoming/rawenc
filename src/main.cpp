@@ -36,8 +36,8 @@ main()
         LOGE("Unable to configure camera");
     }
 
-    camera.onFrameReady().connect([](const FrameBuffer& buffer) {
-        LOGI("Frame is ready: addr<{}>, size<{}>", buffer.data, buffer.size);
+    camera.onFrameReady().connect([](const CapturedFrame& frame) {
+        LOGI("Frame is ready: seq<{}>, addr<{}>, size<{}>", frame.sequence, frame.data, frame.size);
     });
 
     if (not camera.start()) {

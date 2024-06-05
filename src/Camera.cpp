@@ -225,8 +225,8 @@ Camera::requestBuffers(const unsigned int bufferCount)
             return false;
         }
 
-        _buffers[n].size = buffer.length;
-        _buffers[n].data = ptr;
+        _buffers[n].ptr = ptr;
+        _buffers[n].length = buffer.length;
     }
 
     return true;
@@ -300,7 +300,11 @@ Camera::readFrame() const
         return;
     }
 
-    notifyFrameReady(_buffers[buffer.index]);
+    notifyFrameReady({
+        .sequence = buffer.sequence,
+        .data = _buffers[buffer.index].ptr,
+        .size = buffer.bytesused,
+    });
 
     if (xioctl(_fd, VIDIOC_QBUF, &buffer) == -1) {
         LOGE("Unable to enqueue buffer: {}, {}", errno, strerror(errno));
@@ -324,7 +328,7 @@ Camera::handleWorker(const std::stop_token& token) const
 }
 
 void
-Camera::notifyFrameReady(const FrameBuffer& buffer) const
+Camera::notifyFrameReady(const CapturedFrame& frame) const
 {
-    _frameReadySig(buffer);
+    _frameReadySig(frame);
 }
