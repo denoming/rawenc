@@ -8,5 +8,5 @@ struct CameraConfig {
 
 struct FrameBuffer {
     void* data{};
-    size_t size{};
+    unsigned int size{};
 };
