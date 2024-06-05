@@ -12,6 +12,7 @@ set_target_properties(${TARGET}
 
 target_sources(${TARGET}
     PRIVATE main.cpp
+            Camera.cpp
 )
 
 target_link_libraries(${TARGET}
@@ -19,6 +20,8 @@ target_link_libraries(${TARGET}
             FFMPEG::avcodec
             FFMPEG::avutil
             LibV4l2::LibV4l2
+            spdlog::spdlog
+            sigc-3.0
 )
 
 target_compile_features(${TARGET} PRIVATE cxx_std_20)
