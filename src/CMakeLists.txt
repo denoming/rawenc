@@ -13,15 +13,16 @@ set_target_properties(${TARGET}
 target_sources(${TARGET}
     PRIVATE main.cpp
             Camera.cpp
+            Encoder.cpp
+            LoggerInitializer.cpp
 )
 
 target_link_libraries(${TARGET}
     PRIVATE Boost::headers
-            FFMPEG::avcodec
-            FFMPEG::avutil
             LibV4l2::LibV4l2
             spdlog::spdlog
-            sigc-3.0
+            PkgConfig::LibAvCodec
+            PkgConfig::LibSigCpp
 )
 
 target_compile_features(${TARGET} PRIVATE cxx_std_20)

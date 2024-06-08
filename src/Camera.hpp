@@ -7,6 +7,8 @@
 #include <vector>
 #include <thread>
 
+namespace jar {
+
 struct CameraConfig {
     unsigned width{};
     unsigned height{};
@@ -98,3 +100,5 @@ private:
     std::jthread _worker;
     OnFrameReadySig _frameReadySig;
 };
+
+} // namespace jar

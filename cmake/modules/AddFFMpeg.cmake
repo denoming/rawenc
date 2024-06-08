@@ -1,1 +1,3 @@
-find_package(FFMPEG REQUIRED COMPONENTS avcodec avutil)
+find_package(PkgConfig)
+
+pkg_check_modules(LibAvCodec REQUIRED IMPORTED_TARGET libavcodec)

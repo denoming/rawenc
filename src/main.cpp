@@ -1,9 +1,16 @@
 #include <boost/asio.hpp>
 
 #include "Camera.hpp"
+#include "Encoder.hpp"
 #include "Logger.hpp"
+#include "LoggerInitializer.hpp"
 
 namespace asio = boost::asio;
+
+using namespace jar;
+
+static unsigned int kDefaultWidth = 640;
+static unsigned int kDefaultHeight = 480;
 
 namespace {
 
@@ -20,37 +27,83 @@ waitForTermination()
     return (context.run() > 0);
 }
 
+bool
+setupEncoder(const Encoder& encoder)
+{
+    const EncoderConfig encoderConfig{
+        .codec = "libx264",
+        .bitrate = 400000,
+        .width = static_cast<int>(kDefaultWidth),
+        .height = static_cast<int>(kDefaultHeight),
+        .fps = 30,
+        .gopSize = 10,
+        .bFrames = 0,
+    };
+
+    if (not encoder.configure(encoderConfig)) {
+        LOGE("Unable to configure encoder");
+        return false;
+    }
+
+    encoder.onPacketReady().connect([](const EncodedPacket& packet) {
+        fwrite(packet.data, 1, packet.size, stdout);
+        fflush(stdout);
+    });
+
+    return true;
+}
+
+bool
+setupCamera(Camera& camera, const Encoder& encoder)
+{
+    const CameraConfig cameraConfig{
+        .width = kDefaultWidth,
+        .height = kDefaultHeight,
+        .bufferCount = 8,
+    };
+
+    if (not camera.configure(cameraConfig)) {
+        LOGE("Unable to configure camera");
+        return false;
+    }
+
+    camera.onFrameReady().connect([&](const CapturedFrame& frame) {
+        encoder.encode(frame.sequence, frame.data, frame.size);
+    });
+
+    return true;
+}
+
+bool
+captureFrames(Camera& camera)
+{
+    if (not camera.start()) {
+        LOGE("Unable to start camera");
+        return false;
+    }
+    waitForTermination();
+    camera.stop();
+    return true;
+}
+
 } // namespace
 
 int
 main()
 {
-    const CameraConfig config{
-        .width = 640,
-        .height = 480,
-        .bufferCount = 8,
-    };
+    LoggerInitializer::instance().initialize("rawenc.log");
 
-    Camera camera;
-    if (not camera.configure(config)) {
-        LOGE("Unable to configure camera");
-    }
-
-    camera.onFrameReady().connect([](const CapturedFrame& frame) {
-        LOGI("Frame is ready: seq<{}>, addr<{}>, size<{}>", frame.sequence, frame.data, frame.size);
-    });
-
-    if (not camera.start()) {
-        LOGE("Unable to start camera");
-    }
-
-    if (not waitForTermination()) {
-        LOGE("Unable to wait for termination");
-        camera.stop();
+    const Encoder encoder;
+    if (not setupEncoder(encoder)) {
+        LOGE("Unable to setup encoder");
         return EXIT_FAILURE;
     }
 
-    camera.stop();
+    Camera camera;
+    if (not setupCamera(camera, encoder)) {
+        LOGE("Unable to setup camera");
+        return EXIT_FAILURE;
+    }
 
-    return EXIT_SUCCESS;
+    return captureFrames(camera) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

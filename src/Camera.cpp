@@ -26,6 +26,8 @@ xioctl(int fd, int request, void* arg)
 
 } // namespace
 
+namespace jar {
+
 Camera::Camera(std::string deviceName)
     : _deviceName{std::move(deviceName)}
 {
@@ -332,3 +334,5 @@ Camera::notifyFrameReady(const CapturedFrame& frame) const
 {
     _frameReadySig(frame);
 }
+
+} // namespace jar
