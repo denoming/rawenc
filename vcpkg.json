@@ -19,7 +19,8 @@
       "name": "ffmpeg",
       "features": [
         "x264",
-        "x265"
+        "x265",
+        "openh264"
       ]
     },
     "spdlog",
