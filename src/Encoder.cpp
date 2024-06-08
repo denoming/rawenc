@@ -16,7 +16,6 @@ public:
 
     ~Impl()
     {
-        finalize();
         cleanup();
     }
 
@@ -110,6 +109,13 @@ public:
         }
     }
 
+    OnPacketReadySig
+    onPacketReady()
+    {
+        return _packetReadySig;
+    }
+
+private:
     void
     cleanup()
     {
@@ -124,13 +130,6 @@ public:
         }
     }
 
-    OnPacketReadySig
-    onPacketReady()
-    {
-        return _packetReadySig;
-    }
-
-private:
     AVFrame*
     fillFrame(const unsigned int sequence, void* data, unsigned int /*size*/) const
     {
@@ -216,6 +215,13 @@ Encoder::encode(unsigned int sequence, void* data, unsigned int size) const
 {
     assert(_impl);
     _impl->encode(sequence, data, size);
+}
+
+void
+Encoder::finalize() const
+{
+    assert(_impl);
+    _impl->finalize();
 }
 
 Encoder::OnPacketReadySig

@@ -92,18 +92,20 @@ int
 main()
 {
     LoggerInitializer::instance().initialize("rawenc.log");
-
     const Encoder encoder;
     if (not setupEncoder(encoder)) {
         LOGE("Unable to setup encoder");
         return EXIT_FAILURE;
     }
-
     Camera camera;
     if (not setupCamera(camera, encoder)) {
         LOGE("Unable to setup camera");
         return EXIT_FAILURE;
     }
-
-    return captureFrames(camera) ? EXIT_SUCCESS : EXIT_FAILURE;
+    if (not captureFrames(camera)) {
+        LOGE("Unable to setup camera");
+        return EXIT_FAILURE;
+    }
+    encoder.finalize();
+    return EXIT_SUCCESS;
 }

@@ -44,6 +44,9 @@ public:
     void
     encode(unsigned int sequence, void* data, unsigned int size) const;
 
+    void
+    finalize() const;
+
     [[nodiscard]] OnPacketReadySig
     onPacketReady() const;
 
