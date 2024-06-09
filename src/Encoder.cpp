@@ -131,19 +131,21 @@ private:
         }
     }
 
-    FramePtr
-    createFrame(const unsigned int sequence, void* data, unsigned int /*size*/) const
+    [[nodiscard]] FramePtr
+    createFrame(const unsigned int sequence, void* data, const unsigned int /*size*/) const
     {
-        FramePtr frame = std::shared_ptr<AVFrame>(av_frame_alloc(),
-                                                  [](AVFrame* self) { av_frame_free(&self); });
+        auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(),
+                                              [](AVFrame* self) { av_frame_free(&self); });
         if (not frame) {
             LOGE("Unable to allocate frame");
             return {};
         }
 
         frame->format = _ctx->pix_fmt;
-        frame->width = _ctx->width;
-        frame->height = _ctx->height;
+        const int width{_ctx->width};
+        frame->width = width;
+        const int height{_ctx->height};
+        frame->height = height;
         frame->pts = sequence;
 
         if (const int rv = av_frame_get_buffer(frame.get(), 0); rv < 0) {
@@ -153,10 +155,9 @@ private:
 
         av_frame_make_writable(frame.get());
 
-        int offset{0}, bytes = 640 * 480;
+        int offset{0}, bytes = width * height;
         memcpy(frame->data[0], data, bytes);
-        offset += bytes;
-        bytes = 320 * 240;
+        offset += bytes, bytes /= 4;
         memcpy(frame->data[1], static_cast<uint8_t*>(data) + offset, bytes);
         offset += bytes;
         memcpy(frame->data[2], static_cast<uint8_t*>(data) + offset, bytes);
@@ -207,14 +208,14 @@ private:
             if (rv == AVERROR(EAGAIN) or rv == AVERROR_EOF) {
                 break;
             }
-            if (rv < 0) {
+            if (rv >= 0) {
+                notifyPacketReady({
+                    .data = _packet->data,
+                    .size = _packet->size,
+                });
+            } else {
                 LOGE("Error during encoding: {}", av_err2str(rv));
-                break;
             }
-            notifyPacketReady({
-                .data = _packet->data,
-                .size = _packet->size,
-            });
             av_packet_unref(_packet);
         }
         while (rv >= 0);
@@ -227,7 +228,7 @@ private:
     }
 
     void
-    handleWorker(std::stop_token token)
+    handleWorker(const std::stop_token& token)
     {
         while (not token.stop_requested()) {
             if (auto frame = dequeueFrame(); frame) {
