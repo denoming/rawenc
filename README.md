@@ -6,7 +6,16 @@ TBD
 
 ## Description
 
-TBD
+Tested FFMPEG supported encoders:
+ * libx264
+ * libx265
+ * libopenh264
+
+Tested pipelines:
+ * streaming to window (H.264 by libx264):<br/>
+ `$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h264parse ! avdec_h264 ! videoconvert ! xvimagesink sync=false`
+ * streaming to window (H.265 by libx265):<br/>
+ `$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h265parse ! avdec_h265 ! videoconvert ! xvimagesink sync=false`
 
 ## Links
 
