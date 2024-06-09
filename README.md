@@ -11,11 +11,35 @@ Tested FFMPEG supported encoders:
  * libx265
  * libopenh264
 
-Tested pipelines:
- * streaming to window (H.264 by libx264):<br/>
- `$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h264parse ! avdec_h264 ! videoconvert ! xvimagesink sync=false`
- * streaming to window (H.265 by libx265):<br/>
- `$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h265parse ! avdec_h265 ! videoconvert ! xvimagesink sync=false`
+Streaming to window pipeline (H.264 by libx264):<br/>
+```shell
+$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h264parse ! avdec_h264 ! videoconvert ! xvimagesink sync=false
+```
+
+Streaming to window (H.265 by libx265):<br/>
+```shell
+$PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! h265parse ! avdec_h265 ! videoconvert ! xvimagesink sync=false
+```
+
+Streaming to shared memory (H.264 by libx264):<br/>
+```shell
+# Producer pipeline
+$ $PWD/rawenc | gst-launch-1.0 -e fdsrc fd=0 ! shmsink socket-path=/tmp/rawenc.socket
+# Consumer pipeline
+$ gst-launch-1.0 shmsrc socket-path=/tmp/rawenc.socket ! h264parse ! avdec_h264 ! videoconvert ! xvimagesink sync=false
+```
+
+Streaming RAW video to shared memory using V4L2:<br/>
+```shell
+# Producer pipeline
+$ gst-launch-1.0 v4l2src flags=capture io-mode=mmap ! \
+ "video/x-raw, format=YUY2, width=(int)800, height=(int)600, framerate=(fraction)24/1" \
+ ! shmsink socket-path=/tmp/rawenc.socket
+# Consumer pipeline
+$ gst-launch-1.0 shmsrc socket-path=/tmp/rawenc.socket ! \
+ rawvideoparse format=GST_VIDEO_FORMAT_YUY2 framerate=24/1 width=800 height=600 ! \
+ xvimagesink sync=false 
+```
 
 ## Links
 
