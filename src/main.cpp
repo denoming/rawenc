@@ -75,14 +75,16 @@ setupCamera(Camera& camera, const Encoder& encoder)
 }
 
 bool
-captureFrames(Camera& camera)
+startPipeline(Camera& camera, const Encoder& encoder)
 {
+    encoder.start();
     if (not camera.start()) {
         LOGE("Unable to start camera");
         return false;
     }
     waitForTermination();
     camera.stop();
+    encoder.stop();
     return true;
 }
 
@@ -102,7 +104,7 @@ main()
         LOGE("Unable to setup camera");
         return EXIT_FAILURE;
     }
-    if (not captureFrames(camera)) {
+    if (not startPipeline(camera, encoder)) {
         LOGE("Unable to setup camera");
         return EXIT_FAILURE;
     }

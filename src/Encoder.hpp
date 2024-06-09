@@ -42,6 +42,12 @@ public:
     configure(const EncoderConfig& config) const;
 
     void
+    start() const;
+
+    void
+    stop() const;
+
+    void
     encode(unsigned int sequence, void* data, unsigned int size) const;
 
     void

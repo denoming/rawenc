@@ -8,6 +8,11 @@ extern "C" {
 #include <libavutil/imgutils.h>
 }
 
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+
 namespace jar {
 
 class Encoder::Impl {
@@ -30,13 +35,18 @@ public:
             return false;
         }
 
+        _packet = av_packet_alloc();
+        if (not _packet) {
+            LOGE("Unable to allocate packet");
+            return false;
+        }
+
         _ctx = avcodec_alloc_context3(_codec);
         if (not _ctx) {
             cleanup();
             LOGE("Unable to allocate codec context");
             return false;
         }
-
         _ctx->bit_rate = config.bitrate;
         _ctx->width = config.width;
         _ctx->height = config.height;
@@ -63,37 +73,29 @@ public:
             return false;
         }
 
-        _packet = av_packet_alloc();
-        if (not _packet) {
-            cleanup();
-            LOGE("Unable to allocate packet");
-            return false;
-        }
-
-        if (_frame = av_frame_alloc(); _frame) {
-            _frame->format = _ctx->pix_fmt;
-            _frame->width = _ctx->width;
-            _frame->height = _ctx->height;
-        } else {
-            cleanup();
-            LOGE("Unable to allocate frame");
-            return false;
-        }
-
-        if (const int rv = av_frame_get_buffer(_frame, 0); rv < 0) {
-            cleanup();
-            LOGE("Unable to allocate buffer for frame: {}", av_err2str(rv));
-            return false;
-        }
-
         return true;
     }
 
     void
-    encode(const unsigned int sequence, void* data, const unsigned int size) const
+    start()
     {
-        if (sendFrame(fillFrame(sequence, data, size))) {
-            recvPackets();
+        _worker = std::jthread{&Impl::handleWorker, this};
+    }
+
+    void
+    stop()
+    {
+        _worker.request_stop();
+        if (_worker.joinable()) {
+            _worker.join();
+        }
+    }
+
+    void
+    encode(const unsigned int sequence, void* data, const unsigned int size)
+    {
+        if (auto frame = createFrame(sequence, data, size); frame) {
+            enqueueFrame(std::move(frame));
         } else {
             LOGE("Unable to send <{}> frame to encode", sequence);
         }
@@ -116,36 +118,74 @@ public:
     }
 
 private:
+    using FramePtr = std::shared_ptr<AVFrame>;
+
     void
     cleanup()
     {
         if (_packet) {
             av_packet_free(&_packet);
         }
-        if (_frame) {
-            av_frame_free(&_frame);
-        }
         if (_ctx) {
             avcodec_free_context(&_ctx);
         }
     }
 
-    AVFrame*
-    fillFrame(const unsigned int sequence, void* data, unsigned int /*size*/) const
+    FramePtr
+    createFrame(const unsigned int sequence, void* data, unsigned int /*size*/) const
     {
-        av_frame_make_writable(_frame);
+        FramePtr frame = std::shared_ptr<AVFrame>(av_frame_alloc(),
+                                                  [](AVFrame* self) { av_frame_free(&self); });
+        if (not frame) {
+            LOGE("Unable to allocate frame");
+            return {};
+        }
 
-        _frame->pts = sequence;
+        frame->format = _ctx->pix_fmt;
+        frame->width = _ctx->width;
+        frame->height = _ctx->height;
+        frame->pts = sequence;
+
+        if (const int rv = av_frame_get_buffer(frame.get(), 0); rv < 0) {
+            LOGE("Unable to allocate frame buffer: {}", av_err2str(rv));
+            return {};
+        }
+
+        av_frame_make_writable(frame.get());
 
         int offset{0}, bytes = 640 * 480;
-        memcpy(_frame->data[0], data, bytes);
+        memcpy(frame->data[0], data, bytes);
         offset += bytes;
         bytes = 320 * 240;
-        memcpy(_frame->data[1], static_cast<uint8_t*>(data) + offset, bytes);
+        memcpy(frame->data[1], static_cast<uint8_t*>(data) + offset, bytes);
         offset += bytes;
-        memcpy(_frame->data[2], static_cast<uint8_t*>(data) + offset, bytes);
+        memcpy(frame->data[2], static_cast<uint8_t*>(data) + offset, bytes);
 
-        return _frame;
+        return frame;
+    }
+
+    void
+    enqueueFrame(FramePtr frame)
+    {
+        {
+            std::scoped_lock lock{_guard};
+            _queue.push(std::move(frame));
+        }
+        _whenNotEmpty.notify_one();
+    }
+
+    FramePtr
+    dequeueFrame()
+    {
+        std::unique_lock lock{_guard};
+        const bool ok = _whenNotEmpty.wait(
+            lock, _worker.get_stop_token(), [this] { return not _queue.empty(); });
+        FramePtr output;
+        if (ok) {
+            output = _queue.front();
+            _queue.pop();
+        }
+        return output;
     }
 
     [[nodiscard]] bool
@@ -171,12 +211,10 @@ private:
                 LOGE("Error during encoding: {}", av_err2str(rv));
                 break;
             }
-
             notifyPacketReady({
                 .data = _packet->data,
                 .size = _packet->size,
             });
-
             av_packet_unref(_packet);
         }
         while (rv >= 0);
@@ -188,11 +226,30 @@ private:
         _packetReadySig(packet);
     }
 
+    void
+    handleWorker(std::stop_token token)
+    {
+        while (not token.stop_requested()) {
+            if (auto frame = dequeueFrame(); frame) {
+                if (sendFrame(frame.get())) {
+                    recvPackets();
+                } else {
+                    LOGE("Unable to send frame");
+                }
+            }
+        }
+    }
+
 private:
     const AVCodec* _codec{};
-    AVCodecContext* _ctx{};
     AVPacket* _packet{};
-    AVFrame* _frame{};
+    AVCodecContext* _ctx{};
+
+    std::queue<FramePtr> _queue;
+    std::mutex _guard;
+    std::condition_variable_any _whenNotEmpty;
+    std::jthread _worker;
+
     OnPacketReadySig _packetReadySig;
 };
 
@@ -208,6 +265,20 @@ Encoder::configure(const EncoderConfig& config) const
 {
     assert(_impl);
     return _impl->configure(config);
+}
+
+void
+Encoder::start() const
+{
+    assert(_impl);
+    _impl->start();
+}
+
+void
+Encoder::stop() const
+{
+    assert(_impl);
+    _impl->stop();
 }
 
 void
