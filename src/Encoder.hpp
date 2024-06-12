@@ -9,6 +9,10 @@ namespace jar {
 struct EncoderConfig {
     /* The name of encoder to pass to FFMPEG (H.264 - libx264, H.265 - libx265) */
     std::string codec{"libx264"};
+    /* The preset to use while encoding */
+    std::string preset{"fast"};
+    /* The tune to apply after applying preset  */
+    std::string tune{"zerolatency"};
     /* The average bitrate value */
     unsigned bitrate{400000};
     /* The width of the frame (must be a multiple of two) */

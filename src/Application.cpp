@@ -11,9 +11,14 @@
 namespace asio = boost::asio;
 namespace po = boost::program_options;
 
-static const char* kDefaultCodec{"libx264"};
+/* General defaults */
 static unsigned kDefaultWidth = 640;
 static unsigned kDefaultHeight = 480;
+
+/* Encoder specific defaults */
+static const char* kDefaultCodec{"libx264"};
+static const char* kDefaultPreset{"fast"};
+static const char* kDefaultTune{"zerolatency"};
 static unsigned kDefaultBitrate = 400000;
 static unsigned kDefaultFps = 30;
 static unsigned kDefaultGopSize = 10;
@@ -31,20 +36,24 @@ public:
         // clang-format off
         d.add_options()
             ("help,h", "Display help")
-            ("codec", po::value<std::string>(&_codec)
-                ->default_value(kDefaultCodec), "Set codec (e.g. 'libx264')")
             ("width", po::value<unsigned>(&_width)
                 ->default_value(kDefaultWidth), "Set width")
             ("height", po::value<unsigned>(&_height)
                 ->default_value(kDefaultHeight), "Set height")
+            ("codec", po::value<std::string>(&_codec)
+                ->default_value(kDefaultCodec), "Set encoder codec")
+            ("preset", po::value<std::string>(&_preset)
+                ->default_value(kDefaultPreset), "Set encoder preset")
+            ("tune", po::value<std::string>(&_tune)
+                ->default_value(kDefaultTune), "Set encoder tune")
             ("bitrate", po::value<unsigned>(&_bitrate)
-                ->default_value(kDefaultBitrate), "Set bitrate")
+                ->default_value(kDefaultBitrate), "Set encoder bitrate")
             ("fps", po::value<unsigned>(&_fps)
-                ->default_value(kDefaultFps), "Set FPS")
+                ->default_value(kDefaultFps), "Set encoder FPS")
             ("gop-size", po::value<unsigned>(&_gopSize)
-                ->default_value(kDefaultGopSize), "Set GOP size")
+                ->default_value(kDefaultGopSize), "Set encoder GOP size")
             ("b-frames", po::value<unsigned>(&_bFrames)
-                ->default_value(kDefaultBFrames), "Set b-frames count")
+                ->default_value(kDefaultBFrames), "Set encoder b-frames count")
         ;
         // clang-format on
 
@@ -105,6 +114,8 @@ private:
     {
         const EncoderConfig encoderConfig{
             .codec = _codec,
+            .preset = _preset,
+            .tune = _tune,
             .bitrate = _bitrate,
             .width = _width,
             .height = _height,
@@ -149,9 +160,11 @@ private:
 
 private:
     asio::io_context _context;
-    std::string _codec{kDefaultCodec};
     unsigned _width{kDefaultWidth};
     unsigned _height{kDefaultHeight};
+    std::string _codec{kDefaultCodec};
+    std::string _preset{kDefaultPreset};
+    std::string _tune{kDefaultTune};
     unsigned _bitrate{kDefaultBitrate};
     unsigned _fps{kDefaultFps};
     unsigned _gopSize{kDefaultGopSize};

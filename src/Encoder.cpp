@@ -59,12 +59,12 @@ public:
         _ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
         if (_codec->id == AV_CODEC_ID_H264) {
-            av_opt_set(_ctx->priv_data, "preset", "fast", 0);
-            av_opt_set(_ctx->priv_data, "tune", "zerolatency", 0);
+            av_opt_set(_ctx->priv_data, "preset", config.preset.data(), 0);
+            av_opt_set(_ctx->priv_data, "tune", config.tune.data(), 0);
         }
         if (_codec->id == AV_CODEC_ID_H265) {
-            av_opt_set(_ctx->priv_data, "preset", "fast", 0);
-            av_opt_set(_ctx->priv_data, "tune", "zerolatency", 0);
+            av_opt_set(_ctx->priv_data, "preset", config.preset.data(), 0);
+            av_opt_set(_ctx->priv_data, "tune", config.tune.data(), 0);
         }
 
         if (const int rv = avcodec_open2(_ctx, _codec, nullptr); rv < 0) {
