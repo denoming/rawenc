@@ -10,17 +10,17 @@ struct EncoderConfig {
     /* The name of encoder to pass to FFMPEG (H.264 - libx264, H.265 - libx265) */
     std::string codec{"libx264"};
     /* The average bitrate value */
-    int bitrate{400000};
+    unsigned bitrate{400000};
     /* The width of the frame (must be a multiple of two) */
-    int width{640};
+    unsigned width{640};
     /* The height of the frame (must be a multiple of two) */
-    int height{480};
+    unsigned height{480};
     /* The frame rate of incoming stream */
-    int fps{30};
+    unsigned fps{30};
     /* The number of pictures in a group of pictures, or 0 for intra_only */
-    int gopSize{10};
+    unsigned gopSize{10};
     /* The maximum number of B-frames (the output will be delayed by bFrame+1 relative to input) */
-    int bFrames{1};
+    unsigned bFrames{1};
 };
 
 struct EncodedPacket {

@@ -12,8 +12,12 @@ namespace asio = boost::asio;
 namespace po = boost::program_options;
 
 static const char* kDefaultCodec{"libx264"};
-static unsigned int kDefaultWidth = 640;
-static unsigned int kDefaultHeight = 480;
+static unsigned kDefaultWidth = 640;
+static unsigned kDefaultHeight = 480;
+static unsigned kDefaultBitrate = 400000;
+static unsigned kDefaultFps = 30;
+static unsigned kDefaultGopSize = 10;
+static unsigned kDefaultBFrames = 0;
 
 namespace jar {
 
@@ -29,10 +33,18 @@ public:
             ("help,h", "Display help")
             ("codec", po::value<std::string>(&_codec)
                 ->default_value(kDefaultCodec), "Set codec (e.g. 'libx264')")
-            ("width", po::value<unsigned int>(&_width)
+            ("width", po::value<unsigned>(&_width)
                 ->default_value(kDefaultWidth), "Set width")
-            ("height", po::value<unsigned int>(&_height)
+            ("height", po::value<unsigned>(&_height)
                 ->default_value(kDefaultHeight), "Set height")
+            ("bitrate", po::value<unsigned>(&_bitrate)
+                ->default_value(kDefaultBitrate), "Set bitrate")
+            ("fps", po::value<unsigned>(&_fps)
+                ->default_value(kDefaultFps), "Set FPS")
+            ("gop-size", po::value<unsigned>(&_gopSize)
+                ->default_value(kDefaultGopSize), "Set GOP size")
+            ("b-frames", po::value<unsigned>(&_bFrames)
+                ->default_value(kDefaultBFrames), "Set b-frames count")
         ;
         // clang-format on
 
@@ -93,12 +105,12 @@ private:
     {
         const EncoderConfig encoderConfig{
             .codec = _codec,
-            .bitrate = 400000,
-            .width = static_cast<int>(_width),
-            .height = static_cast<int>(_height),
-            .fps = 30,
-            .gopSize = 10,
-            .bFrames = 0,
+            .bitrate = _bitrate,
+            .width = _width,
+            .height = _height,
+            .fps = _fps,
+            .gopSize = _gopSize,
+            .bFrames = _bFrames,
         };
 
         if (not _encoder.configure(encoderConfig)) {
@@ -138,8 +150,12 @@ private:
 private:
     asio::io_context _context;
     std::string _codec{kDefaultCodec};
-    unsigned int _width{kDefaultWidth};
-    unsigned int _height{kDefaultHeight};
+    unsigned _width{kDefaultWidth};
+    unsigned _height{kDefaultHeight};
+    unsigned _bitrate{kDefaultBitrate};
+    unsigned _fps{kDefaultFps};
+    unsigned _gopSize{kDefaultGopSize};
+    unsigned _bFrames{kDefaultBFrames};
     Camera _camera;
     Encoder _encoder;
 };

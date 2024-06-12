@@ -48,14 +48,14 @@ public:
             return false;
         }
         _ctx->bit_rate = config.bitrate;
-        _ctx->width = config.width;
-        _ctx->height = config.height;
-        _ctx->time_base = {1, config.fps};
-        _ctx->framerate = {config.fps, 1};
+        _ctx->width = static_cast<int>(config.width);
+        _ctx->height = static_cast<int>(config.height);
+        _ctx->time_base = {1, static_cast<int>(config.fps)};
+        _ctx->framerate = {static_cast<int>(config.fps), 1};
         if (_codec->id != AV_CODEC_ID_HEVC) {
-            _ctx->max_b_frames = config.bFrames;
+            _ctx->max_b_frames = static_cast<int>(config.bFrames);
         }
-        _ctx->gop_size = config.gopSize;
+        _ctx->gop_size = static_cast<int>(config.gopSize);
         _ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
         if (_codec->id == AV_CODEC_ID_H264) {
