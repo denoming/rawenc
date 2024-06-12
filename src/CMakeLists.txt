@@ -19,6 +19,7 @@ target_sources(${TARGET}
 
 target_link_libraries(${TARGET}
     PRIVATE Boost::headers
+            Boost::program_options
             LibV4l2::LibV4l2
             spdlog::spdlog
             PkgConfig::LibAvCodec

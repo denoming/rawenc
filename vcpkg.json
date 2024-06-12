@@ -16,6 +16,10 @@
       "version>=": "1.83.0"
     },
     {
+      "name": "boost-program-options",
+      "version>=": "1.83.0"
+    },
+    {
       "name": "ffmpeg",
       "features": [
         "x264",

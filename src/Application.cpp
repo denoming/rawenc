@@ -1,11 +1,15 @@
 #include <boost/asio.hpp>
+#include <boost/program_options.hpp>
 
 #include "Camera.hpp"
 #include "Encoder.hpp"
 #include "Logger.hpp"
 #include "LoggerInitializer.hpp"
 
+#include <iostream>
+
 namespace asio = boost::asio;
+namespace po = boost::program_options;
 
 static unsigned int kDefaultWidth = 640;
 static unsigned int kDefaultHeight = 480;
@@ -14,6 +18,31 @@ namespace jar {
 
 class Application {
 public:
+    [[nodiscard]] bool
+    parseArgs(const int argc, char* argv[])
+    {
+        po::options_description d{"RawEnc CLI"};
+
+        // clang-format off
+        d.add_options()
+            ("help,h", "Display help")
+            ("width", po::value<unsigned int>(&_width), "Set width")
+            ("height", po::value<unsigned int>(&_height), "Set height")
+        ;
+        // clang-format on
+
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, d), vm);
+        po::notify(vm);
+
+        if (vm.contains("help")) {
+            std::cout << d << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
     [[nodiscard]] bool
     run()
     {
@@ -60,8 +89,8 @@ private:
         const EncoderConfig encoderConfig{
             .codec = "libx264",
             .bitrate = 400000,
-            .width = static_cast<int>(kDefaultWidth),
-            .height = static_cast<int>(kDefaultHeight),
+            .width = static_cast<int>(_width),
+            .height = static_cast<int>(_height),
             .fps = 30,
             .gopSize = 10,
             .bFrames = 0,
@@ -84,8 +113,8 @@ private:
     setupCamera()
     {
         const CameraConfig cameraConfig{
-            .width = kDefaultWidth,
-            .height = kDefaultHeight,
+            .width = _width,
+            .height = _height,
             .bufferCount = 8,
         };
 
@@ -103,6 +132,8 @@ private:
 
 private:
     asio::io_context _context;
+    unsigned int _width{kDefaultWidth};
+    unsigned int _height{kDefaultHeight};
     Camera _camera;
     Encoder _encoder;
 };
@@ -110,9 +141,13 @@ private:
 } // namespace jar
 
 int
-main()
+main(int argc, char* argv[])
 {
     jar::LoggerInitializer::instance().initialize("rawenc.log");
     jar::Application app;
+    if (not app.parseArgs(argc, argv)) {
+        /* Show help menu and exit */
+        return EXIT_SUCCESS;
+    }
     return app.run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
