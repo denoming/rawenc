@@ -27,9 +27,12 @@ public:
         // clang-format off
         d.add_options()
             ("help,h", "Display help")
-            ("codec", po::value<std::string>(&_codec), "Set codec (e.g. 'libx264')")
-            ("width", po::value<unsigned int>(&_width), "Set width")
-            ("height", po::value<unsigned int>(&_height), "Set height")
+            ("codec", po::value<std::string>(&_codec)
+                ->default_value(kDefaultCodec), "Set codec (e.g. 'libx264')")
+            ("width", po::value<unsigned int>(&_width)
+                ->default_value(kDefaultWidth), "Set width")
+            ("height", po::value<unsigned int>(&_height)
+                ->default_value(kDefaultHeight), "Set height")
         ;
         // clang-format on
 
