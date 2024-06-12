@@ -11,6 +11,7 @@
 namespace asio = boost::asio;
 namespace po = boost::program_options;
 
+static const char* kDefaultCodec{"libx264"};
 static unsigned int kDefaultWidth = 640;
 static unsigned int kDefaultHeight = 480;
 
@@ -26,6 +27,7 @@ public:
         // clang-format off
         d.add_options()
             ("help,h", "Display help")
+            ("codec", po::value<std::string>(&_codec), "Set codec (e.g. 'libx264')")
             ("width", po::value<unsigned int>(&_width), "Set width")
             ("height", po::value<unsigned int>(&_height), "Set height")
         ;
@@ -87,7 +89,7 @@ private:
     setupEncoder() const
     {
         const EncoderConfig encoderConfig{
-            .codec = "libx264",
+            .codec = _codec,
             .bitrate = 400000,
             .width = static_cast<int>(_width),
             .height = static_cast<int>(_height),
@@ -132,6 +134,7 @@ private:
 
 private:
     asio::io_context _context;
+    std::string _codec{kDefaultCodec};
     unsigned int _width{kDefaultWidth};
     unsigned int _height{kDefaultHeight};
     Camera _camera;
