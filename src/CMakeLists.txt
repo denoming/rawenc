@@ -11,7 +11,7 @@ set_target_properties(${TARGET}
 )
 
 target_sources(${TARGET}
-    PRIVATE main.cpp
+    PRIVATE Application.cpp
             Camera.cpp
             Encoder.cpp
             LoggerInitializer.cpp
