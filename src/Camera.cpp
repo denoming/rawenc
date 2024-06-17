@@ -43,11 +43,18 @@ Camera::~Camera()
 bool
 Camera::configure(const CameraConfig& config)
 {
+    LOGI("Camera config: width<{}>, height<{}>, bufferCount<{}>",
+         config.width,
+         config.height,
+         config.bufferCount);
+
+    LOGD("Open <{}> device", _deviceName);
     if (not openDevice()) {
         LOGE("Unable to open <{}> device", _deviceName);
         return false;
     }
 
+    LOGD("Configure <{}> device", _deviceName);
     if (not configureDevice(config)) {
         LOGE("Unable to configure <{}> deivce", _deviceName);
         closeDevice();
@@ -65,17 +72,21 @@ Camera::start()
         return false;
     }
 
+    LOGD("Request <{}> buffers", _config->bufferCount);
     if (not requestBuffers(_config->bufferCount)) {
         LOGE("Unable to request <{}> buffers", _config->bufferCount);
         return false;
     }
 
+    LOGD("Enqueue <{}> buffers", _config->bufferCount);
     if (not enqueueBuffers()) {
         LOGE("Unable to enqueue <{}> buffers", _config->bufferCount);
         return false;
     }
 
+    LOGD("Activate video stream");
     if (not activateStream()) {
+        LOGE("Unable to activate video stream");
         return false;
     }
 
@@ -116,7 +127,9 @@ Camera::openDevice()
     }
 
     _fd = v4l2_open(_deviceName.data(), O_RDWR /* required */ | O_NONBLOCK, 0);
-    if (_fd == kInvalidFd) {
+    if (_fd != kInvalidFd) {
+        LOGD("Device <{}> is opened with <{}> dscriptor", _deviceName, _fd);
+    } else {
         LOGE("Cannot open {}: {}, {}", _deviceName, errno, strerror(errno));
         return false;
     }
@@ -127,6 +140,7 @@ Camera::openDevice()
 void
 Camera::closeDevice()
 {
+    LOGD("Close <{}> device descriptor", _fd);
     std::ignore = v4l2_close(_fd);
     _fd = kInvalidFd;
 }
@@ -144,11 +158,11 @@ Camera::configureDevice(const CameraConfig& config)
         return false;
     }
 
+    LOGD("Device <{}> has following caps: {}", _deviceName, cap.capabilities);
     if (not(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
         LOGE("Device <{}> is not video capture device", _deviceName);
         return false;
     }
-
     if (not(cap.capabilities & V4L2_CAP_STREAMING)) {
         LOGE("Device <{}> doesn't support streaming I/O", _deviceName);
         return false;
@@ -171,6 +185,7 @@ Camera::configureDevice(const CameraConfig& config)
     fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
     if (xioctl(_fd, VIDIOC_S_FMT, &fmt) == 0) {
+        LOGD("Stream data format: <{}x{}>", fmt.fmt.pix.width, fmt.fmt.pix.height);
         _config = CameraConfig{
             .width = fmt.fmt.pix.width,
             .height = fmt.fmt.pix.height,

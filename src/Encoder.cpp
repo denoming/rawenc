@@ -27,6 +27,18 @@ public:
     bool
     configure(const EncoderConfig& config)
     {
+        LOGI("Encoder config: codec<{}>, width<{}>, height<{}>, preset<{}>, tune<{}>, bitrate<{}>, "
+             "fps<{}>, bFrames<{}>, gopSize<{}>",
+             config.codec,
+             config.width,
+             config.height,
+             config.preset,
+             config.tune,
+             config.bitrate,
+             config.fps,
+             config.bFrames,
+             config.gopSize);
+
         av_log_set_level(AV_LOG_QUIET);
 
         _codec = avcodec_find_encoder_by_name(config.codec.data());

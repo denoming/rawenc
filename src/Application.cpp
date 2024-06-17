@@ -130,6 +130,7 @@ private:
         }
 
         _encoder.onPacketReady().connect([](const EncodedPacket& packet) {
+            LOGT("Packet: data<{}>, size<{}>", fmt::ptr(packet.data), packet.size);
             fwrite(packet.data, 1, packet.size, stdout);
             fflush(stdout);
         });
@@ -152,6 +153,10 @@ private:
         }
 
         _camera.onFrameReady().connect([this](const CapturedFrame& frame) {
+            LOGT("Frame: index<{}>, data<{}>, size<{}>",
+                 frame.sequence,
+                 fmt::ptr(frame.data),
+                 frame.size);
             _encoder.encode(frame.sequence, frame.data, frame.size);
         });
 

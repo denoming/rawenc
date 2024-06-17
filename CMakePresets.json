@@ -14,25 +14,37 @@
       "name": "debug",
       "inherits": ["dc-debug"],
       "binaryDir": "build-debug",
-      "displayName": "Debug"
+      "displayName": "Debug",
+      "cacheVariables": {
+        "RAWENC_ACTIVE_LOG_LEVEL": "Debug"
+      }
     },
     {
       "name": "release",
       "inherits": ["dc-release"],
       "binaryDir": "build-release",
-      "displayName": "Release"
+      "displayName": "Release",
+      "cacheVariables": {
+        "RAWENC_ACTIVE_LOG_LEVEL": "Debug"
+      }
     },
     {
       "name": "debug-vcpkg",
       "inherits": ["dc-debug-vcpkg"],
       "binaryDir": "build-debug-vcpkg",
-      "displayName": "Debug - Vcpkg"
+      "displayName": "Debug - Vcpkg",
+      "cacheVariables": {
+        "RAWENC_ACTIVE_LOG_LEVEL": "Debug"
+      }
     },
     {
       "name": "release-vcpkg",
       "inherits": ["dc-release-vcpkg"],
       "binaryDir": "build-release-vcpkg",
-      "displayName": "Release - Vcpkg"
+      "displayName": "Release - Vcpkg",
+      "cacheVariables": {
+        "RAWENC_ACTIVE_LOG_LEVEL": "Debug"
+      }
     }
   ],
   "buildPresets": [
