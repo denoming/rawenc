@@ -27,15 +27,15 @@ public:
     bool
     configure(const EncoderConfig& config)
     {
-        LOGI("Encoder config: codec<{}>, width<{}>, height<{}>, preset<{}>, tune<{}>, bitrate<{}>, "
-             "fps<{}>, bFrames<{}>, gopSize<{}>",
+        LOGI("Encoder config: codec<{}>, width<{}>, height<{}>, fps<{}>, preset<{}>, tune<{}>, "
+             "bitrate<{}>, bFrames<{}>, gopSize<{}>",
              config.codec,
              config.width,
              config.height,
+             config.fps,
              config.preset,
              config.tune,
              config.bitrate,
-             config.fps,
              config.bFrames,
              config.gopSize);
 
@@ -59,24 +59,31 @@ public:
             LOGE("Unable to allocate codec context");
             return false;
         }
-        _ctx->bit_rate = config.bitrate;
         _ctx->width = static_cast<int>(config.width);
         _ctx->height = static_cast<int>(config.height);
         _ctx->time_base = {1, static_cast<int>(config.fps)};
         _ctx->framerate = {static_cast<int>(config.fps), 1};
-        if (_codec->id != AV_CODEC_ID_HEVC) {
-            _ctx->max_b_frames = static_cast<int>(config.bFrames);
-        }
-        _ctx->gop_size = static_cast<int>(config.gopSize);
         _ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
-        if (_codec->id == AV_CODEC_ID_H264) {
-            av_opt_set(_ctx->priv_data, "preset", config.preset.data(), 0);
-            av_opt_set(_ctx->priv_data, "tune", config.tune.data(), 0);
+        if (config.bitrate) {
+            _ctx->bit_rate = static_cast<int>(*config.bitrate);
         }
-        if (_codec->id == AV_CODEC_ID_H265) {
-            av_opt_set(_ctx->priv_data, "preset", config.preset.data(), 0);
-            av_opt_set(_ctx->priv_data, "tune", config.tune.data(), 0);
+        if (config.gopSize) {
+            _ctx->gop_size = static_cast<int>(*config.gopSize);
+        }
+        if (config.bFrames) {
+            _ctx->max_b_frames = static_cast<int>(*config.bFrames);
+        }
+        if (_codec->id == AV_CODEC_ID_H264 or _codec->id == AV_CODEC_ID_H265) {
+            if (config.preset) {
+                av_opt_set(_ctx->priv_data, "preset", config.preset->data(), 0);
+            }
+            if (config.tune) {
+                av_opt_set(_ctx->priv_data, "tune", config.tune->data(), 0);
+            }
+            if (config.crf) {
+                av_opt_set_int(_ctx->priv_data, "crf", *config.crf, 0);
+            }
         }
 
         if (const int rv = avcodec_open2(_ctx, _codec, nullptr); rv < 0) {

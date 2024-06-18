@@ -36,24 +36,36 @@ public:
         // clang-format off
         d.add_options()
             ("help,h", "Display help")
-            ("width", po::value<unsigned>(&_width)
-                ->default_value(kDefaultWidth), "Set width")
-            ("height", po::value<unsigned>(&_height)
-                ->default_value(kDefaultHeight), "Set height")
-            ("codec", po::value<std::string>(&_codec)
-                ->default_value(kDefaultCodec), "Set encoder codec")
-            ("preset", po::value<std::string>(&_preset)
-                ->default_value(kDefaultPreset), "Set encoder preset")
-            ("tune", po::value<std::string>(&_tune)
-                ->default_value(kDefaultTune), "Set encoder tune")
-            ("bitrate", po::value<unsigned>(&_bitrate)
-                ->default_value(kDefaultBitrate), "Set encoder bitrate")
-            ("fps", po::value<unsigned>(&_fps)
-                ->default_value(kDefaultFps), "Set encoder FPS")
-            ("gop-size", po::value<unsigned>(&_gopSize)
-                ->default_value(kDefaultGopSize), "Set encoder GOP size")
-            ("b-frames", po::value<unsigned>(&_bFrames)
-                ->default_value(kDefaultBFrames), "Set encoder b-frames count")
+            ("width", po::value<unsigned>()->notifier([this](const unsigned v) {
+                _cameraConfig.width = _encoderConfig.width = v;
+            })->default_value(kDefaultWidth), "Set width")
+            ("height", po::value<unsigned>()->notifier([this](const unsigned v) {
+                _cameraConfig.height = _encoderConfig.height = v;
+            })->default_value(kDefaultHeight), "Set height")
+            ("codec", po::value<std::string>()->notifier([this](const std::string& v) {
+                _encoderConfig.codec = v;
+            })->default_value(kDefaultCodec), "Set encoder codec")
+            ("fps", po::value<unsigned>()->notifier([this](const unsigned fps) {
+                _encoderConfig.fps = fps;
+            })->default_value(kDefaultFps), "Set encoder FPS")
+            ("preset", po::value<std::string>()->notifier([this](const std::string& v) {
+                _encoderConfig.preset = v;
+            }), "Choose encoder preset")
+            ("tune", po::value<std::string>()->notifier([this](const std::string& v) {
+                _encoderConfig.tune = v;
+            }), "Choose encoder tune")
+            ("bitrate", po::value<unsigned>()->notifier([this](const unsigned v) {
+                _encoderConfig.bitrate = v;
+            }), "Set encoder bitrate")
+            ("crf", po::value<unsigned>()->notifier([this](const unsigned v) {
+                _encoderConfig.crf = v;
+            }), "Set CRF (Constant Rate Factor) value")
+            ("gop-size", po::value<unsigned>()->notifier([this](const unsigned v) {
+                _encoderConfig.gopSize = v;
+            }), "Set encoder GOP size")
+            ("b-frames", po::value<unsigned>()->notifier([this](const unsigned v) {
+               _encoderConfig.bFrames = v;
+            }), "Set encoder b-frames count")
         ;
         // clang-format on
 
@@ -112,19 +124,7 @@ private:
     [[nodiscard]] bool
     setupEncoder() const
     {
-        const EncoderConfig encoderConfig{
-            .codec = _codec,
-            .preset = _preset,
-            .tune = _tune,
-            .bitrate = _bitrate,
-            .width = _width,
-            .height = _height,
-            .fps = _fps,
-            .gopSize = _gopSize,
-            .bFrames = _bFrames,
-        };
-
-        if (not _encoder.configure(encoderConfig)) {
+        if (not _encoder.configure(_encoderConfig)) {
             LOGE("Unable to configure encoder");
             return false;
         }
@@ -141,13 +141,7 @@ private:
     [[nodiscard]] bool
     setupCamera()
     {
-        const CameraConfig cameraConfig{
-            .width = _width,
-            .height = _height,
-            .bufferCount = 8,
-        };
-
-        if (not _camera.configure(cameraConfig)) {
+        if (not _camera.configure(_cameraConfig)) {
             LOGE("Unable to configure camera");
             return false;
         }
@@ -165,17 +159,10 @@ private:
 
 private:
     asio::io_context _context;
-    unsigned _width{kDefaultWidth};
-    unsigned _height{kDefaultHeight};
-    std::string _codec{kDefaultCodec};
-    std::string _preset{kDefaultPreset};
-    std::string _tune{kDefaultTune};
-    unsigned _bitrate{kDefaultBitrate};
-    unsigned _fps{kDefaultFps};
-    unsigned _gopSize{kDefaultGopSize};
-    unsigned _bFrames{kDefaultBFrames};
     Camera _camera;
+    CameraConfig _cameraConfig;
     Encoder _encoder;
+    EncoderConfig _encoderConfig;
 };
 
 } // namespace jar

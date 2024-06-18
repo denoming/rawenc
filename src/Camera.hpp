@@ -12,7 +12,7 @@ namespace jar {
 struct CameraConfig {
     unsigned width{};
     unsigned height{};
-    unsigned bufferCount{};
+    unsigned bufferCount{8};
 };
 
 struct CapturedFrame {
