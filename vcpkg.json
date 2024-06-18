@@ -29,5 +29,18 @@
     },
     "spdlog",
     "libsigcpp"
-  ]
+  ],
+  "features": {
+    "nvc": {
+      "dependencies": [
+        {
+          "name": "ffmpeg",
+          "features": [
+            "nvcodec"
+          ]
+        }
+      ],
+      "description": "Add nvcodec supporting"
+    }
+  }
 }
