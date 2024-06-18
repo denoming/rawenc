@@ -1,15 +1,19 @@
 # RawEnc
 
-## Name
+`RawEnc` is a simple application with command line interface. Created in order to show a simple example
+of capturing raw video stream from typical camera sensor using V4L2 and encoding using FFMPEG framework.
 
-TBD
-
-## Description
-
-Tested FFMPEG supported encoders:
+Tested encoders:
  * libx264
  * libx265
  * libopenh264
+ * h264_nvenc (optional)
+ * hevc_nvenc (optional)
+
+Note: The `h264_nvenc` and `hevc_nvenc` codecs are available only if Nvidia GPU
+      present and cmake `RAWENC_ENABLE_NVCODEC` option is enabled.
+
+## Pipelines
 
 Streaming to window pipeline (H.264 by libx264):<br/>
 ```shell
@@ -39,6 +43,16 @@ $ gst-launch-1.0 v4l2src flags=capture io-mode=mmap ! \
 $ gst-launch-1.0 shmsrc socket-path=/tmp/rawenc.socket ! \
  rawvideoparse format=GST_VIDEO_FORMAT_YUY2 framerate=24/1 width=800 height=600 ! \
  xvimagesink sync=false 
+```
+
+## Useful
+
+* Shows available codec options:
+```shell
+$ ffmpeg -h encoder=libx264 --help
+$ ffmpeg -h encoder=libx265 --help
+$ ffmpeg -h encoder=h264_nvenc --help
+$ ffmpeg -h encoder=hevc_nvenc --help
 ```
 
 ## Links
